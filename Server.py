@@ -5,7 +5,7 @@ import struct
 import binascii
 from socket import *
 
-serverPort = 12000
+serverPort = 12001
 IPaddress = '123.123.12'
 serverSocket = socket(AF_INET,SOCK_STREAM)
 serverSocket.bind(('', serverPort))

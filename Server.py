@@ -33,7 +33,7 @@ while 1:
             clientIP = data[3]
             port = data[5]
             clientName = data[7]
-            print 'JOINED_CHATROOM: '
+            print 'JOINED_CHATROOM: ',
             for i in range(1, nameLength+1):
                 print data4[i],
             

@@ -50,14 +50,13 @@ def chat_server():
                         clientIP = data2[3]
                         clientPort = data2[5]
                         clientName = data2[7]
-                        joined = "JOINED_CHATROOM: ", chatroomName, "\nSERVER_IP: ", socket.gethostbyname(socket.gethostname()), "\nPORT: ", PORT, "\nROOM_REFERENCE: 1\nJOIN_ID: ", joinID, "\n"
-                        joined = str(joined)
-                        joined = ' '.join(joined)
+                        joined = ["JOINED_CHATROOM: ", chatroomName, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: 1\nJOIN_ID: ", str(joinID), "\n"]
+                        joined3 = ' '.join(joined)
                         joinID = joinID + 1
-                        sockfd.send(joined)
+                        sockfd.send(joined3)
                     else:
                         # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + '[' + str(sock.getpeername()) + '] ' + data)
+                        broadcast(server_socket, sock, "\r" + clientName + ': ' + data)
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:

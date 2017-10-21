@@ -34,8 +34,6 @@ def chat_server():
                 sockfd, addr = server_socket.accept()
                 SOCKET_LIST.append(sockfd)
                 print "Client (%s, %s) connected" % addr
-                
-                broadcast(server_socket, sockfd, "[%s:%s] entered our chatting room\n" % addr)
         
             # a message from a client, not a new connection
             else:
@@ -54,6 +52,7 @@ def chat_server():
                         joined3 = ' '.join(joined)
                         joinID = joinID + 1
                         sockfd.send(joined3)
+                        broadcast(server_socket, sockfd, clientName + " entered our chat room\n" % addr)
                     else:
                         # there is something in the socket
                         broadcast(server_socket, sock, "\r" + clientName + ': ' + data)

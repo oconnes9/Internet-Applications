@@ -52,7 +52,7 @@ def chat_server():
                         clientName = data2[7]
                         joined = "JOINED_CHATROOM: ", chatroomName, "\nSERVER_IP: ", socket.gethostbyname(socket.gethostname()), "\nPORT: ", PORT, "\nROOM_REFERENCE: 1\nJOIN_ID: ", joinID, "\n"
                         joined = str(joined)
-                        joined = ''.join(joined)
+                        joined = ' '.join(joined)
                         joinID = joinID + 1
                         sockfd.send(joined)
                     else:

@@ -1,45 +1,91 @@
-# Sean O'Connell 14315362
-# TCP Server
-#
-import struct
-import binascii
+# chat_server.py
+
+import sys
 import socket
-from socket import *
+import select
 
-serverPort = 12000
-IPaddress = '123.123.12.1'
-serverSocket = socket(AF_INET,SOCK_STREAM)
-serverSocket.bind(('', serverPort))
-serverSocket.listen(1)
-print 'The server is ready to receive now'
-connectionSocket, addr = serverSocket.accept()
-joinID = 1
+HOST = ''
+SOCKET_LIST = []
+RECV_BUFFER = 4096
+PORT = 9009
 
 
-while 1:
+def chat_server():
     
-    recieved = connectionSocket.recv(2048)
-    if recieved.strip() == "KILL_SERVICE\n":
-        connectionSocket.close()
-        sys.exit("Received disconnect message.  Shutting down.")
-    elif recieved:
-        data = str(recieved)
-        data2 = data.split()
-        if data2[0] == "JOIN_CHATROOM:":
-            data3 = data.splitlines()
-            data4 = data3[0]
-            data4 = data4.split()
-            nameLength = len(data4) - 1
-            clientIP = data[3]
-            port = data[5]
-            clientName = data[7]
-            print 'JOINED_CHATROOM: ',
-            for i in range(1, nameLength+1):
-                print data4[i],
-            
-            print '\n', 'SERVER_IP: ', IPaddress,'\n', 'PORT', serverPort,'\n', 'ROOM_REF','\n',  'JOIN_ID', joinID, '\n'
-            joinID = joinID + 1
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind((HOST, PORT))
+    server_socket.listen(10)
+    
+    # add server socket object to the list of readable connections
+    SOCKET_LIST.append(server_socket)
+    
+    print "Chat server started on port " + str(PORT)
+    joinID = 1
+    while 1:
+        
+        # get the list sockets which are ready to be read through select
+        # 4th arg, time_out  = 0 : poll and never block
+        ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
+        
+        for sock in ready_to_read:
+            # a new connection request recieved
+            if sock == server_socket:
+                sockfd, addr = server_socket.accept()
+                SOCKET_LIST.append(sockfd)
+                print "Client (%s, %s) connected" % addr
+                
+                broadcast(server_socket, sockfd, "[%s:%s] entered our chatting room\n" % addr)
+        
+            # a message from a client, not a new connection
+            else:
+                # process data recieved from client,
+                #   try:
+                # receiving data from the socket.
+                data = sock.recv(RECV_BUFFER)
+                data2 = data.split()
+                if data:
+                    if data2[0] == "JOIN_CHATROOM:":
+                        chatroomName = data2[1]
+                        clientIP = data2[3]
+                        clientPort = data2[5]
+                        clientName = data2[7]
+                        joined = "JOINED_CHATROOM: ", chatroomName, "\nSERVER_IP: ", socket.gethostbyname(socket.gethostname()), "\nPORT: ", PORT, "\nROOM_REFERENCE: 1\nJOIN_ID: ", joinID, "\n"
+                        joined = str(joined)
+                        joined = ''.join(joined)
+                        joinID = joinID + 1
+                        sockfd.send(joined)
+                    else:
+                        # there is something in the socket
+                        broadcast(server_socket, sock, "\r" + '[' + str(sock.getpeername()) + '] ' + data)
+                else:
+                    # remove the socket that's broken
+                    if sock in SOCKET_LIST:
+                        SOCKET_LIST.remove(sock)
+                        # at this stage, no data means probably the connection has been broken
+                        broadcast(server_socket, sock, "Client (%s, %s) is offline\n" % addr)
 
+# exception
+#except:
+#  broadcast(server_socket, sock, "Client (%s, %s) is offlinee\n" % addr)
+#                   continue
 
+    server_socket.close()
 
+# broadcast chat messages to all connected clients
+def broadcast (server_socket, sock, message):
+    for socket in SOCKET_LIST:
+        # send the message only to peer
+        if socket != server_socket and socket != sock :
+            try :
+                socket.send(message)
+            except :
+                # broken socket connection
+                socket.close()
+                # broken socket, remove it
+                if socket in SOCKET_LIST:
+                    SOCKET_LIST.remove(socket)
 
+if __name__ == "__main__":
+    
+    sys.exit(chat_server())

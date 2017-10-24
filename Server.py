@@ -10,14 +10,6 @@ RECV_BUFFER = 4096
 PORT = 9009
 userList = []
 
-class Sockets(object):
-
-    def __init__(self, socket=None, pointer=None):
-
-        self.socket = socket
-        self.pointer = pointer
-
-
 class User(object):
     
     def __init__(self, room=None, name=None, joinID=None, IP=None, port=None):
@@ -36,7 +28,7 @@ def chat_server():
     server_socket.listen(10)
     
     # add server socket object to the list of readable connections
-    SOCKET_LIST.append(Sockets(server_socket, None))
+    SOCKET_LIST.append(server_socket)
     
     print "Chat server started on port " + str(PORT)
     joinID = 1
@@ -52,9 +44,11 @@ def chat_server():
             # a new connection request recieved
             if sock == server_socket:
                 sockfd, addr = server_socket.accept()
-                userList.append(0, 0, 0, 0, 0)
+                person = User(0, 0, 0, 0, 0)
+                userList.append(person)
                 #SOCKET_LIST.append(sockfd, userList[joinID-1])
                 SOCKET_LIST.append(sockfd)
+                
                 print "Client (%s, %s) connected" % addr
         
             # a message from a client, not a new connection
@@ -83,8 +77,9 @@ def chat_server():
                         returnMes2 = ' '.join(returnMes)
                         sockfd.send(returnMes2)
                     else:
+                        number = SOCKET_LIST.index(sock) - 1
                         # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + 'user' + ' ' + data)
+                        broadcast(server_socket, sock, "\r" + userList[number].name + ' ' + data)
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:

@@ -20,6 +20,77 @@ class User(object):
         IP = IP
         port = port
 
+def lindexsplit(List,*lindex):
+    
+    index = list(lindex)
+    
+    index.sort()
+    
+    templist1 = []
+    templist2 = []
+    templist3 = []
+    
+    breakcounter = 0
+    itemcounter = 0
+    finalcounter = 0
+    
+    
+    numberofbreaks = len(index)
+    totalitems = len(List)
+    
+    lastindexval = index[(len(index)-1)]
+    finalcounttrigger = (totalitems-(lastindexval+1))
+    
+    for item in List:
+        
+        itemcounter += 1
+        
+        indexofitem = itemcounter - 1
+        
+        nextbreakindex = index[breakcounter]
+        
+        #Less than the last cut
+        if breakcounter <= numberofbreaks:
+            
+            if indexofitem < nextbreakindex:
+                
+                templist1.append(item)
+        
+            elif breakcounter < (numberofbreaks - 1):
+                
+                templist1.append(item)
+                
+                templist2.append(templist1)
+                
+                templist1 = []
+                
+                breakcounter +=1
+            
+            else:
+                
+                if indexofitem <= lastindexval and indexofitem <= totalitems:
+                    
+                    templist1.append(item)
+                    
+                    templist2.append(templist1)
+                    
+                    templist1 = []
+            
+                else:
+                    
+                    if indexofitem >= lastindexval and indexofitem < totalitems + 1:
+                        
+                        finalcounter += 1
+                        
+                        templist3.append(item)
+                        
+                        if finalcounter == finalcounttrigger:
+                            
+                            templist2.append(templist3)
+
+
+    return templist2
+
 def chat_server():
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -76,13 +147,20 @@ def chat_server():
                         returnMes = ["HELO text\nIP:[", str(socket.gethostbyname(socket.gethostname())), "]\nPort:[", str(PORT), "]\nStudentID:[14315362]\n"]
                         returnMes2 = ' '.join(returnMes)
                         sockfd.send(returnMes2)
-                    else:
-                        number = SOCKET_LIST.index(sock) - 1
+                    elif data2[0] == "CHAT:":
+                        #number = SOCKET_LIST.index(sock) - 1
+                        currJoinID = data2[3]
+                        currRoomRef = data2[1]
+                        currName = data2[5]
+                        newList = lindexsplit(data2,6)
+                        newString = ' '.join(newList)
                         # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + userList[number].name + ' ' + data)
+                        broadcast(server_socket, sock, "\r" + currName + ' ' + newString)
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:
+                        errorCode = "ERROR_CODE: [integer]\nERROR_DESCRIPTION: [string describing error]"
+                        sockfd.send(errorCode)
                         SOCKET_LIST.remove(sock)
                         # at this stage, no data means probably the connection has been broken
                         broadcast(server_socket, sock, "Client (%s, %s) is offline\n" % addr)

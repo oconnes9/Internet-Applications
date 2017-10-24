@@ -8,6 +8,15 @@ HOST = ''
 SOCKET_LIST = []
 RECV_BUFFER = 4096
 PORT = 9009
+userList = []
+
+class Sockets(object):
+
+    def __init__(self, socket=None, pointer=None):
+
+        self.socket = socket
+        self.pointer = pointer
+
 
 class User(object):
     
@@ -27,11 +36,11 @@ def chat_server():
     server_socket.listen(10)
     
     # add server socket object to the list of readable connections
-    SOCKET_LIST.append(server_socket)
+    SOCKET_LIST.append(Sockets(server_socket, None))
     
     print "Chat server started on port " + str(PORT)
     joinID = 1
-    userList = []
+
     
     while 1:
 
@@ -43,6 +52,8 @@ def chat_server():
             # a new connection request recieved
             if sock == server_socket:
                 sockfd, addr = server_socket.accept()
+                userList.append(0, 0, 0, 0, 0)
+                #SOCKET_LIST.append(sockfd, userList[joinID-1])
                 SOCKET_LIST.append(sockfd)
                 print "Client (%s, %s) connected" % addr
         
@@ -55,8 +66,13 @@ def chat_server():
                 data2 = data.split()
                 if data:
                     if data2[0] == "JOIN_CHATROOM:":
-                        person = User(data2[1], data2[7], joinID, data2[3], data2[5])
-                        userList.append(person)
+                        #person = User(data2[1], data2[7], joinID, data2[3], data2[5])
+                        #userList.append(person)
+                        userList[joinID-1].room = data2[1]
+                        userList[joinID-1].name = data2[7]
+                        userList[joinID-1].joinID = joinID
+                        userList[joinID-1].IP = data2[3]
+                        userList[joinID-1].port = data2[5]
                         joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: 1\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
                         broadcast(server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n')
                         joined3 = ' '.join(joined)
@@ -68,7 +84,7 @@ def chat_server():
                         sockfd.send(returnMes2)
                     else:
                         # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + 'user: ' + data)
+                        broadcast(server_socket, sock, "\r" + 'user' + ' ' + data)
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:

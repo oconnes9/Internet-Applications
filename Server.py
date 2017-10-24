@@ -9,6 +9,15 @@ SOCKET_LIST = []
 RECV_BUFFER = 4096
 PORT = 9009
 
+class User(object):
+    
+    def __init__(self, room=None, name=None, joinID=None, IP=None, port=None):
+    
+        self.room = room
+        self.name = name
+        self.joinID = joinID
+        IP = IP
+        port = port
 
 def chat_server():
     
@@ -22,8 +31,10 @@ def chat_server():
     
     print "Chat server started on port " + str(PORT)
     joinID = 1
+    userList = []
+    
     while 1:
-        
+
         # get the list sockets which are ready to be read through select
         # 4th arg, time_out  = 0 : poll and never block
         ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
@@ -44,18 +55,20 @@ def chat_server():
                 data2 = data.split()
                 if data:
                     if data2[0] == "JOIN_CHATROOM:":
-                        chatroomName = data2[1]
-                        clientIP = data2[3]
-                        clientPort = data2[5]
-                        clientName = data2[7]
-                        joined = ["JOINED_CHATROOM: ", chatroomName, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: 1\nJOIN_ID: ", str(joinID), "\n"]
+                        person = User(data2[1], data2[7], joinID, data2[3], data2[5])
+                        userList.append(person)
+                        joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: 1\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
+                        broadcast(server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n')
                         joined3 = ' '.join(joined)
                         joinID = joinID + 1
                         sockfd.send(joined3)
-                        broadcast(server_socket, sockfd, clientName + " entered our chat room\n" % addr)
+                    elif data == "HELO text\n":
+                        returnMes = ["HELO text\nIP:[", str(socket.gethostbyname(socket.gethostname())), "]\nPort:[", str(PORT), "]\nStudentID:[14315362]\n"]
+                        returnMes2 = ' '.join(returnMes)
+                        sockfd.send(returnMes2)
                     else:
                         # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + clientName + ': ' + data)
+                        broadcast(server_socket, sock, "\r" + 'user: ' + data)
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:
@@ -87,3 +100,6 @@ def broadcast (server_socket, sock, message):
 if __name__ == "__main__":
     
     sys.exit(chat_server())
+
+
+

@@ -20,76 +20,6 @@ class User(object):
         IP = IP
         port = port
 
-def lindexsplit(List,*lindex):
-    
-    index = list(lindex)
-    
-    index.sort()
-    
-    templist1 = []
-    templist2 = []
-    templist3 = []
-    
-    breakcounter = 0
-    itemcounter = 0
-    finalcounter = 0
-    
-    
-    numberofbreaks = len(index)
-    totalitems = len(List)
-    
-    lastindexval = index[(len(index)-1)]
-    finalcounttrigger = (totalitems-(lastindexval+1))
-    
-    for item in List:
-        
-        itemcounter += 1
-        
-        indexofitem = itemcounter - 1
-        
-        nextbreakindex = index[breakcounter]
-        
-        #Less than the last cut
-        if breakcounter <= numberofbreaks:
-            
-            if indexofitem < nextbreakindex:
-                
-                templist1.append(item)
-        
-            elif breakcounter < (numberofbreaks - 1):
-                
-                templist1.append(item)
-                
-                templist2.append(templist1)
-                
-                templist1 = []
-                
-                breakcounter +=1
-            
-            else:
-                
-                if indexofitem <= lastindexval and indexofitem <= totalitems:
-                    
-                    templist1.append(item)
-                    
-                    templist2.append(templist1)
-                    
-                    templist1 = []
-            
-                else:
-                    
-                    if indexofitem >= lastindexval and indexofitem < totalitems + 1:
-                        
-                        finalcounter += 1
-                        
-                        templist3.append(item)
-                        
-                        if finalcounter == finalcounttrigger:
-                            
-                            templist2.append(templist3)
-
-
-    return templist2
 
 def chat_server():
     
@@ -152,10 +82,11 @@ def chat_server():
                         currJoinID = data2[3]
                         currRoomRef = data2[1]
                         currName = data2[5]
-                        newList = lindexsplit(data2,6)
-                        newString = ' '.join(newList)
+                        for x in range(0, 7):
+                            data2.pop(0)
+                        message = ' '.join(data2)
                         # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + currName + ' ' + newString)
+                        broadcast(server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + message + '\n\n')
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:
@@ -189,6 +120,9 @@ def broadcast (server_socket, sock, message):
 if __name__ == "__main__":
     
     sys.exit(chat_server())
+
+
+
 
 
 

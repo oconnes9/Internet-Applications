@@ -3,6 +3,7 @@
 import sys
 import socket
 import select
+import re
 
 HOST = ''
 SOCKET_LIST = []
@@ -62,22 +63,24 @@ def chat_server():
                 # receiving data from the socket.
 
                 data = sock.recv(RECV_BUFFER)
+                regex = re.compile('\[.*?\]')
+                m = re.findall(regex, data)
                 data2 = data.split()
                 if data:
                     if data2[0] == "JOIN_CHATROOM:":
                         #person = User(data2[1], data2[7], joinID, data2[3], data2[5])
                         #userList.append(person)
-                        userList[joinID-1].room = data2[1]
-                        userList[joinID-1].name = data2[7]
+                        userList[joinID-1].room = m[0]
+                        userList[joinID-1].name = m[3]
                         userList[joinID-1].joinID = joinID
-                        userList[joinID-1].IP = data2[3]
-                        userList[joinID-1].port = data2[5]
+                        userList[joinID-1].IP = m[1]
+                        userList[joinID-1].port = m[2]
                         if userList[joinID-1].room in roomListStrings:
                             currReference = roomListStrings.index(userList[joinID-1].room)
                             roomListLists[currReference].append(sockfd)
                             broadList = roomListLists[currReference]
                             broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n')
-                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
+                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
                             joinID = joinID + 1
                             sockfd.send(joined3)
@@ -88,7 +91,7 @@ def chat_server():
                             list = []
                             roomListLists.append(list)
                             roomListLists[roomReference].append(sockfd)
-                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
+                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
                             joinID = joinID + 1
                             roomReference = roomReference + 1

@@ -9,6 +9,9 @@ SOCKET_LIST = []
 RECV_BUFFER = 4096
 PORT = 9009
 userList = []
+roomListStrings = []
+roomListLists = []
+
 
 class User(object):
     
@@ -27,7 +30,7 @@ def chat_server():
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
     server_socket.listen(10)
-    
+    roomReference = 0
     # add server socket object to the list of readable connections
     SOCKET_LIST.append(server_socket)
     
@@ -36,7 +39,7 @@ def chat_server():
 
     
     while 1:
-
+        
         # get the list sockets which are ready to be read through select
         # 4th arg, time_out  = 0 : poll and never block
         ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
@@ -57,6 +60,7 @@ def chat_server():
                 # process data recieved from client,
                 #   try:
                 # receiving data from the socket.
+
                 data = sock.recv(RECV_BUFFER)
                 data2 = data.split()
                 if data:
@@ -68,11 +72,28 @@ def chat_server():
                         userList[joinID-1].joinID = joinID
                         userList[joinID-1].IP = data2[3]
                         userList[joinID-1].port = data2[5]
-                        joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: 1\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
-                        broadcast(server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n')
-                        joined3 = ' '.join(joined)
-                        joinID = joinID + 1
-                        sockfd.send(joined3)
+                        if userList[joinID-1].room in roomListStrings:
+                            currReference = roomListStrings.index(userList[joinID-1].room)
+                            roomListLists[currReference].append(sockfd)
+                            broadList = roomListLists[currReference]
+                            broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n')
+                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
+                            joined3 = ' '.join(joined)
+                            joinID = joinID + 1
+                            sockfd.send(joined3)
+                    
+                        else:
+                            roomListStrings.append(userList[joinID-1].room)
+                            print (roomListStrings)
+                            list = []
+                            roomListLists.append(list)
+                            roomListLists[roomReference].append(sockfd)
+                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n"]
+                            joined3 = ' '.join(joined)
+                            joinID = joinID + 1
+                            roomReference = roomReference + 1
+                            sockfd.send(joined3)
+            
                     elif data == "HELO text\n":
                         returnMes = ["HELO text\nIP:[", str(socket.gethostbyname(socket.gethostname())), "]\nPort:[", str(PORT), "]\nStudentID:[14315362]\n"]
                         returnMes2 = ' '.join(returnMes)
@@ -85,8 +106,8 @@ def chat_server():
                         for x in range(0, 7):
                             data2.pop(0)
                         message = ' '.join(data2)
-                        # there is something in the socket
-                        broadcast(server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + message + '\n\n')
+                        broadList = roomListLists[int(currRoomRef)]
+                        broadcast(broadList, server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + message + '\n\n')
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:
@@ -104,8 +125,8 @@ def chat_server():
     server_socket.close()
 
 # broadcast chat messages to all connected clients
-def broadcast (server_socket, sock, message):
-    for socket in SOCKET_LIST:
+def broadcast (list, server_socket, sock, message):
+    for socket in list:
         # send the message only to peer
         if socket != server_socket and socket != sock :
             try :

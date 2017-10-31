@@ -61,9 +61,8 @@ def chat_server():
                 # process data recieved from client,
                 #   try:
                 # receiving data from the socket.
-
                 data = sock.recv(RECV_BUFFER)
-                regex = re.compile('\[.*?\]')
+                regex = re.compile(r"\[([A-Za-z\s0-9_!?.,]+)\]")
                 m = re.findall(regex, data)
                 data2 = data.split()
                 if data:
@@ -79,7 +78,7 @@ def chat_server():
                             currReference = roomListStrings.index(userList[joinID-1].room)
                             roomListLists[currReference].append(sockfd)
                             broadList = roomListLists[currReference]
-                            broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n')
+                            broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n\n')
                             joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
                             joinID = joinID + 1
@@ -87,7 +86,6 @@ def chat_server():
                     
                         else:
                             roomListStrings.append(userList[joinID-1].room)
-                            print (roomListStrings)
                             list = []
                             roomListLists.append(list)
                             roomListLists[roomReference].append(sockfd)
@@ -103,14 +101,25 @@ def chat_server():
                         sockfd.send(returnMes2)
                     elif data2[0] == "CHAT:":
                         #number = SOCKET_LIST.index(sock) - 1
-                        currJoinID = data2[3]
-                        currRoomRef = data2[1]
-                        currName = data2[5]
-                        for x in range(0, 7):
-                            data2.pop(0)
-                        message = ' '.join(data2)
-                        broadList = roomListLists[int(currRoomRef)]
+                        currJoinID = m[1]
+                        currRoomRef = m[0]
+                        currName = m[2]
+                        message = m[3]
+                            #for x in range(0, 7):
+                            #  data2.pop(0)
+                            #message = ' '.join(data2)
+                        broadList = roomListLists[int(int(currRoomRef))]
                         broadcast(broadList, server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + message + '\n\n')
+                    elif data2[0] == "LEAVE_CHATROOM:":
+                        currRoomRef = m[0]
+                        currJoinID = m[1]
+                        currName = m[2]
+                        roomListLists[int(currRoomRef)].remove(sockfd)
+                        broadList = roomListLists[int(currRoomRef)]
+                        sockfd.send("LEFT_CHATROOM: [" + currRoomRef + "]\nJOIN_ID: " + currJoinID + "\n\n")
+                        broadcast(broadList, server_socket, sock, "\r" + currName + " has left our chatroom.\n\n")
+                        
+                        
                 else:
                     # remove the socket that's broken
                     if sock in SOCKET_LIST:

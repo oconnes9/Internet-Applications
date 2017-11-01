@@ -77,6 +77,7 @@ def chat_server():
                         if userList[joinID-1].room in roomListStrings:
                             currReference = roomListStrings.index(userList[joinID-1].room)
                             roomListLists[currReference].append(sockfd)
+                            print(roomListLists[currReference])
                             broadList = roomListLists[currReference]
                             broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n\n')
                             joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
@@ -89,6 +90,7 @@ def chat_server():
                             list = []
                             roomListLists.append(list)
                             roomListLists[roomReference].append(sockfd)
+                            print(roomListLists[roomReference])
                             joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", str(socket.gethostbyname(socket.gethostname())), "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
                             joinID = joinID + 1
@@ -114,9 +116,12 @@ def chat_server():
                         currRoomRef = m[0]
                         currJoinID = m[1]
                         currName = m[2]
-                        roomListLists[int(currRoomRef)].remove(sockfd)
+                        currSockfd = SOCKET_LIST[int(currJoinID)]
+                        print(currRoomRef)
+                        print(currSockfd)
+                        roomListLists[int(currRoomRef)].remove(currSockfd)
                         broadList = roomListLists[int(currRoomRef)]
-                        sockfd.send("LEFT_CHATROOM: [" + currRoomRef + "]\nJOIN_ID: " + currJoinID + "\n\n")
+                        currSockfd.send("LEFT_CHATROOM: [" + currRoomRef + "]\nJOIN_ID: " + currJoinID + "\n\n")
                         broadcast(broadList, server_socket, sock, "\r" + currName + " has left our chatroom.\n\n")
                         
                         

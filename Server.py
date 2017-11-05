@@ -4,6 +4,8 @@ import sys
 import socket
 import select
 import re
+from threading import Thread
+from SocketServer import ThreadingMixIn
 
 HOST = ''
 SOCKET_LIST = []
@@ -24,6 +26,22 @@ class User(object):
         IP = IP
         port = port
 
+class ClientThread(Thread):
+    
+    def __init__(self,ip,port):
+        Thread.__init__(self)
+        self.ip = ip
+        self.port = port
+        print "[+] New server socket thread started for " + ip + ":" + str(port)
+    
+    def run(self):
+        while True :
+            data = conn.recv(2048)
+            print "Server received data:", data
+            MESSAGE = raw_input("Multithreaded Python server : Enter Response from Server/Enter exit:")
+            if MESSAGE == 'exit':
+                break
+            conn.send(MESSAGE)
 
 def chat_server():
     
@@ -32,6 +50,7 @@ def chat_server():
     server_socket.bind((HOST, PORT))
     server_socket.listen(10)
     roomReference = 0
+    threads = []
     # add server socket object to the list of readable connections
     SOCKET_LIST.append(server_socket)
     
@@ -48,7 +67,14 @@ def chat_server():
         for sock in ready_to_read:
             # a new connection request recieved
             if sock == server_socket:
-                sockfd, addr = server_socket.accept()
+                print "Multithreaded Python server : Waiting for connections from TCP clients..."
+                (conn, (ip,port)) = server_socket.accept()
+                sockfd, addr = (conn, (ip,port))
+                newthread = ClientThread(ip,port)
+                newthread.start()
+                threads.append(newthread)
+                for t in threads:
+                    t.join()
                 person = User(0, 0, 0, 0, 0)
                 userList.append(person)
                 #SOCKET_LIST.append(sockfd, userList[joinID-1])
@@ -98,7 +124,7 @@ def chat_server():
                             sockfd.send(joined3)
             
                     elif data == "HELO text\n":
-                        returnMes = ["HELO text\nIP:[", str(socket.gethostbyname(socket.gethostname())), "]\nPort:[", str(PORT), "]\nStudentID:[14315362]\n"]
+                        returnMes = ["HELO text\nIP:[86.47.56.169]\nPort:[", str(PORT), "]\nStudentID:[14315362]\n"]
                         returnMes2 = ' '.join(returnMes)
                         sockfd.send(returnMes2)
                     elif data2[0] == "CHAT:":

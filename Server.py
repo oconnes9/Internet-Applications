@@ -74,10 +74,8 @@ def chat_server():
                                 user = x
                                 if x.new == 0:
                                     new = 0
-                                    print("new")
                                 elif x.new == 1:
                                     new = 1
-                                    print("not new")
                         if new == 0:
                             if temp != 0:
                                 joinID = temp
@@ -100,7 +98,6 @@ def chat_server():
                         if roomString in roomListStrings:
                             currReference = roomListStrings.index(roomString)
                             roomListLists[currReference].append(sock)
-                            print(roomListLists[currReference])
                             broadList = roomListLists[currReference]
                             broadcast(broadList, server_socket, sock, "\r" + user.name + ' entered our chatting room\n\n')
                             joined = ["JOINED_CHATROOM: ", roomString, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(user.joinID), "\n\n"]
@@ -112,7 +109,6 @@ def chat_server():
                             list = []
                             roomListLists.append(list)
                             roomListLists[roomReference].append(sockfd)
-                            print(roomListLists[roomReference])
                             joined = ["JOINED_CHATROOM: ", roomString, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
                             roomReference = roomReference + 1
@@ -137,25 +133,27 @@ def chat_server():
                         messageString = ""
                         currJoinID = data2[3]
                         currRoomRef = data2[1]
-                        if sock in roomListLists[int(currRoomRef)]:
-                            print(roomListLists[int(currRoomRef)])
-                            x = 5
-                            while data2[x] != "MESSAGE:":
-                                nameString = nameString + str(data2[x]) + " "
-                                x = x+1
-                            currName = nameString
-                            #currName = data2[5]
-                            while x+1 != size:
-                                messageString = messageString + str(data2[x+1]) + " "
-                                x = x+1
-                                #message = data2[7]
-                                #for x in range(0, 7):
-                                #  data2.pop(0)
-                                #message = ' '.join(data2)
-                            broadList = roomListLists[int(currRoomRef)]
-                            broadcast(broadList, server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + messageString + '\n\n')
+                        if (int(currRoomRef)+1) > len(roomListLists):
+                            sock.send("ERROR_CODE: 1\nERROR_DESCRIPTION: This chatroom does not exist.\n")
                         else:
-                            sock.send("ERROR_CODE: 1\nERROR_DESCRIPTION: You are not in this chatroom.\n")
+                            if sock in roomListLists[int(currRoomRef)]:
+                                x = 5
+                                while data2[x] != "MESSAGE:":
+                                    nameString = nameString + str(data2[x]) + " "
+                                    x = x+1
+                                currName = nameString
+                                #currName = data2[5]
+                                while x+1 != size:
+                                    messageString = messageString + str(data2[x+1]) + " "
+                                    x = x+1
+                                    #message = data2[7]
+                                    #for x in range(0, 7):
+                                    #  data2.pop(0)
+                                    #message = ' '.join(data2)
+                                broadList = roomListLists[int(currRoomRef)]
+                                broadcast(broadList, server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + messageString + '\n\n')
+                            else:
+                                sock.send("ERROR_CODE: 2\nERROR_DESCRIPTION: You are not in this chatroom.\n")
                     elif data2[0] == "LEAVE_CHATROOM:":
                         currRoomRef = data2[1]
                         currJoinID = data2[3]
@@ -171,14 +169,12 @@ def chat_server():
                         broadcast(broadList, server_socket, sock, "\r" + currName + " has left our chatroom.\n\n")
     
                     elif data2[0] == "DISCONNECT:":
-                        print("helo")
                         SOCKET_LIST.remove(sock)
                         for x in userList:
                             if x.socket == sock:
                                 temp = x.joinID
                                 userList.remove(x)
                         for y in roomListLists:
-                            print(y)
                             for z in y:
                                 if z == sock:
                                     y.remove(z)

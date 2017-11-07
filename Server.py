@@ -145,6 +145,10 @@ def chat_server():
                         broadList = roomListLists[int(currRoomRef)]
                         currSockfd.send("LEFT_CHATROOM: " + currRoomRef + "\nJOIN_ID: " + currJoinID + "\n\n")
                         broadcast(broadList, server_socket, sock, "\r" + currName + " has left our chatroom.\n\n")
+    
+                    elif data[0] == "DISCONNECT:"
+                        SOCKET_LIST.remove(sockfd)
+                        userList.remove()
                             
                     elif data == "KILL_SERVICE\n":
                         print("Socket Closed.\n")

@@ -14,19 +14,20 @@ roomListStrings = []
 roomListLists = []
 serverIP = '86.47.56.169'
 
+
 class User(object):
     
-    def __init__(self, room="", name=None, joinID=None, IP=None, port=None):
+    def __init__(self, room="", name=None, joinID=None, IP=None, port=None, socket=None):
     
         self.room = room
         self.name = name
         self.joinID = joinID
         IP = IP
         port = port
-
+        socket = socket
 
 def chat_server():
-    
+    temp = 0
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind((HOST, PORT))
@@ -44,12 +45,12 @@ def chat_server():
         # get the list sockets which are ready to be read through select
         # 4th arg, time_out  = 0 : poll and never block
         ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
-        
+        temp2 = joinID
         for sock in ready_to_read:
             # a new connection request recieved
             if sock == server_socket:
                 sockfd, addr = server_socket.accept()
-                person = User(0, 0, 0, 0, 0)
+                person = User(0, 0, 0, 0, 0, sockfd)
                 userList.append(person)
                 #SOCKET_LIST.append(sockfd, userList[joinID-1])
                 SOCKET_LIST.append(sockfd)
@@ -68,6 +69,8 @@ def chat_server():
                 size = len(data2)
                 if data:
                     if data2[0] == "JOIN_CHATROOM:":
+                        if temp != 0:
+                            joinID = temp
                         #person = User(data2[1], data2[7], joinID, data2[3], data2[5])
                         #userList.append(person)
                         x = 1
@@ -80,6 +83,7 @@ def chat_server():
                         userList[joinID-1].joinID = joinID
                         userList[joinID-1].IP = data2[x+1]
                         userList[joinID-1].port = data2[x+3]
+                        userList[joinID-1].socket = sockfd
                         while x+5 != size:
                             nameString = nameString + str(data2[x+5]) + " "
                             x = x+1
@@ -92,7 +96,10 @@ def chat_server():
                             broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n\n')
                             joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
-                            joinID = joinID + 1
+                            if temp != 0:
+                                joinID = temp2
+                            else:
+                                joinID = joinID + 1
                             sockfd.send(joined3)
                     
                         else:
@@ -103,10 +110,13 @@ def chat_server():
                             print(roomListLists[roomReference])
                             joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
-                            joinID = joinID + 1
+                            if temp != 0:
+                                joinID = temp2
+                            else:
+                                joinID = joinID + 1
                             roomReference = roomReference + 1
                             sockfd.send(joined3)
-            
+                        temp = 0
                     elif data2[0] == "HELO":
                         returnMes = [data, "IP: ", serverIP, "\nPort:", str(PORT), "\nStudentID:14315362\n"]
                         returnMes2 = ' '.join(returnMes)
@@ -117,6 +127,7 @@ def chat_server():
                         messageString = ""
                         currJoinID = data2[3]
                         currRoomRef = data2[1]
+                        print(roomListLists[int(currRoomRef)])
                         x = 5
                         while data2[x] != "MESSAGE:":
                             nameString = nameString + str(data2[x]) + " "
@@ -130,7 +141,7 @@ def chat_server():
                             #for x in range(0, 7):
                             #  data2.pop(0)
                             #message = ' '.join(data2)
-                        broadList = roomListLists[int(int(currRoomRef))]
+                        broadList = roomListLists[int(currRoomRef)]
                         broadcast(broadList, server_socket, sock, "\r" + "CHAT: " + currRoomRef + '\nCLIENT_NAME: ' + currName + '\nMESSAGE: ' + messageString + '\n\n')
                     elif data2[0] == "LEAVE_CHATROOM:":
                         currRoomRef = data2[1]
@@ -146,9 +157,20 @@ def chat_server():
                         currSockfd.send("LEFT_CHATROOM: " + currRoomRef + "\nJOIN_ID: " + currJoinID + "\n\n")
                         broadcast(broadList, server_socket, sock, "\r" + currName + " has left our chatroom.\n\n")
     
-                    elif data[0] == "DISCONNECT:"
-                        SOCKET_LIST.remove(sockfd)
-                        userList.remove()
+                    elif data2[0] == "DISCONNECT:":
+                        print("helo")
+                        SOCKET_LIST.remove(sock)
+                        for x in userList:
+                            if x.socket == sock:
+                                temp = x.joinID
+                                userList.remove(x)
+                        for y in roomListLists:
+                            print(y)
+                            for z in y:
+                                if z == sock:
+                                    y.remove(z)
+                        
+                        
                             
                     elif data == "KILL_SERVICE\n":
                         print("Socket Closed.\n")

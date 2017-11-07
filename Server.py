@@ -161,10 +161,10 @@ def chat_server():
                         while x != size:
                             currName = currName + str(data2[x]) + " "
                             x = x+1
-                        currSockfd = SOCKET_LIST[int(currJoinID)]
-                        roomListLists[int(currRoomRef)].remove(currSockfd)
+                    #currSockfd = SOCKET_LIST[int(currJoinID)]
+                        roomListLists[int(currRoomRef)].remove(sock)
                         broadList = roomListLists[int(currRoomRef)]
-                        currSockfd.send("LEFT_CHATROOM: " + currRoomRef + "\nJOIN_ID: " + currJoinID + "\n\n")
+                        sock.send("LEFT_CHATROOM: " + currRoomRef + "\nJOIN_ID: " + currJoinID + "\n\n")
                         broadcast(broadList, server_socket, sock, "\r" + currName + " has left our chatroom.\n\n")
     
                     elif data2[0] == "DISCONNECT:":

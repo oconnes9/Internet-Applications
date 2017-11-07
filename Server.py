@@ -17,14 +17,14 @@ serverIP = '86.47.56.169'
 
 class User(object):
     
-    def __init__(self, room="", name=None, joinID=None, IP=None, port=None, socket=None):
+    def __init__(self, name=None, joinID=None, IP=None, port=None, socket=None, new=None):
     
-        self.room = room
         self.name = name
         self.joinID = joinID
-        IP = IP
-        port = port
-        socket = socket
+        self.IP = IP
+        self.port = port
+        self.socket = socket
+        self.new = new
 
 def chat_server():
     temp = 0
@@ -35,7 +35,7 @@ def chat_server():
     roomReference = 0
     # add server socket object to the list of readable connections
     SOCKET_LIST.append(server_socket)
-    
+    user = User(0, 0, 0, 0, 0, 0)
     print "Chat server started on port " + str(PORT)
     joinID = 1
 
@@ -50,7 +50,7 @@ def chat_server():
             # a new connection request recieved
             if sock == server_socket:
                 sockfd, addr = server_socket.accept()
-                person = User(0, 0, 0, 0, 0, sockfd)
+                person = User(0, 0, 0, 0, sockfd, 0)
                 userList.append(person)
                 #SOCKET_LIST.append(sockfd, userList[joinID-1])
                 SOCKET_LIST.append(sockfd)
@@ -69,54 +69,64 @@ def chat_server():
                 size = len(data2)
                 if data:
                     if data2[0] == "JOIN_CHATROOM:":
-                        if temp != 0:
-                            joinID = temp
-                        #person = User(data2[1], data2[7], joinID, data2[3], data2[5])
-                        #userList.append(person)
-                        x = 1
-                        roomString = ""
-                        nameString = ""
-                        while data2[x] != "CLIENT_IP:":
-                            roomString = roomString + str(data2[x]) + " "
-                            x = x+1
-                        userList[joinID-1].room = roomString
-                        userList[joinID-1].joinID = joinID
-                        userList[joinID-1].IP = data2[x+1]
-                        userList[joinID-1].port = data2[x+3]
-                        userList[joinID-1].socket = sockfd
-                        while x+5 != size:
-                            nameString = nameString + str(data2[x+5]) + " "
-                            x = x+1
-                        userList[joinID-1].name = nameString
-                        if userList[joinID-1].room in roomListStrings:
-                            currReference = roomListStrings.index(userList[joinID-1].room)
-                            roomListLists[currReference].append(sockfd)
+                        for x in userList:
+                            if x.socket == sock:
+                                user = x
+                                if x.new == 0:
+                                    new = 0
+                                    print("new")
+                                elif x.new == 1:
+                                    new = 1
+                                    print("not new")
+                        if new == 0:
+                            if temp != 0:
+                                joinID = temp
+                            #person = User(data2[1], data2[7], joinID, data2[3], data2[5])
+                            #userList.append(person)
+                            x = 1
+                            roomString = ""
+                            nameString = ""
+                            while data2[x] != "CLIENT_IP:":
+                                roomString = roomString + str(data2[x]) + " "
+                                x = x+1
+                            userList[joinID-1].joinID = joinID
+                            userList[joinID-1].IP = data2[x+1]
+                            userList[joinID-1].port = data2[x+3]
+                            userList[joinID-1].socket = sockfd
+                            while x+5 != size:
+                                nameString = nameString + str(data2[x+5]) + " "
+                                x = x+1
+                            userList[joinID-1].name = nameString
+                        if roomString in roomListStrings:
+                            currReference = roomListStrings.index(roomString)
+                            roomListLists[currReference].append(sock)
                             print(roomListLists[currReference])
                             broadList = roomListLists[currReference]
-                            broadcast(broadList, server_socket, sock, "\r" + userList[joinID-1].name + ' entered our chatting room\n\n')
-                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
+                            broadcast(broadList, server_socket, sock, "\r" + user.name + ' entered our chatting room\n\n')
+                            joined = ["JOINED_CHATROOM: ", roomString, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(currReference), "\nJOIN_ID: ", str(user.joinID), "\n\n"]
                             joined3 = ' '.join(joined)
-                            if temp != 0:
-                                joinID = temp2
-                            else:
-                                joinID = joinID + 1
-                            sockfd.send(joined3)
+                            sock.send(joined3)
                     
                         else:
-                            roomListStrings.append(userList[joinID-1].room)
+                            roomListStrings.append(roomString)
                             list = []
                             roomListLists.append(list)
                             roomListLists[roomReference].append(sockfd)
                             print(roomListLists[roomReference])
-                            joined = ["JOINED_CHATROOM: ", userList[joinID-1].room, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
+                            joined = ["JOINED_CHATROOM: ", roomString, "\nSERVER_IP: ", serverIP, "\nPORT: ", str(PORT), "\nROOM_REFERENCE: ", str(roomReference), "\nJOIN_ID: ", str(userList[joinID-1].joinID), "\n\n"]
                             joined3 = ' '.join(joined)
+                            roomReference = roomReference + 1
+                            sock.send(joined3)
+                            
+                        if new == 0:
+                            userList[joinID-1].new = 1
                             if temp != 0:
                                 joinID = temp2
                             else:
                                 joinID = joinID + 1
-                            roomReference = roomReference + 1
-                            sockfd.send(joined3)
-                        temp = 0
+                            temp = 0
+                            
+                
                     elif data2[0] == "HELO":
                         returnMes = [data, "IP: ", serverIP, "\nPort:", str(PORT), "\nStudentID:14315362\n"]
                         returnMes2 = ' '.join(returnMes)

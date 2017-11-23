@@ -11,7 +11,7 @@ PORT = 9009
 userList = []
 roomListStrings = []
 roomListLists = []
-serverIP = '134.226.44.147'
+serverIP = '134.226.44.156'
 
 
 class User(object):
@@ -45,25 +45,20 @@ def chat_server():
         # 4th arg, time_out  = 0 : poll and never block
         ready_to_read,ready_to_write,in_error = select.select(SOCKET_LIST,[],[],0)
         for sock in ready_to_read:
-	    print('start:')
             if sock == server_socket:
                 sockfd, addr = server_socket.accept()
                 #SOCKET_LIST.append(sockfd, userList[joinID-1])
 		person = User(0, 0, 0, 0, sockfd, 0)
                 userList.append(person)
                 SOCKET_LIST.append(sockfd)
-		print(SOCKET_LIST.index(sockfd))
-		print(userList.index(person))
                 print "Client (%s, %s) connected" % addr
         
             # a message from a client, not a new connection
             else:
-		print("messages")
                 # process data recieved from client,
                 #   try:
                 # receiving data from the socket.
                 data = sock.recv(RECV_BUFFER)
-		print(data)
                 #regex = re.compile(r"\[([A-Za-z\s0-9_!?.,]+)\]")
                 #m = re.findall(regex, data)
                 data2 = data.split()
@@ -71,8 +66,7 @@ def chat_server():
                     #if data:
                 if data2[0] == "JOIN_CHATROOM:":
                     for x in userList:
-			print(userList.index(x))
-			print(x.joinID)
+			print('index ', userList.index(x), 'joinID ', x.joinID)
                         if x.socket == sock:
                             user = x
                             if x.new == 0:
@@ -122,7 +116,6 @@ def chat_server():
                         broadcast(broadList, server_socket, sock, joined5)
                 
                     else:
-			print("Hi")
                         roomListStrings.append(roomString)
 			currReference = roomListStrings.index(roomString)
                         list = []
@@ -132,7 +125,6 @@ def chat_server():
                         joined3 = ''.join(joined)
 			joined4 = ["CHAT: ", str(currReference),"\nCLIENT_NAME: ",nameString , "\nMESSAGE: ",nameString," has joined\n\n"]
 			joined5 = ''.join(joined4)
-			print(joined3)
                         roomReference = roomReference + 1
                         sock.send(joined3)
 			sock.send(joined5)
@@ -168,7 +160,6 @@ def chat_server():
                             currName = nameString
                             #currName = data2[5]
                             while x+1 != size:
-				print("Helloo")
                                 messageString = messageString + str(data2[x+1]) + " "
                                 x = x+1
                                 #message = data2[7]
@@ -179,9 +170,7 @@ def chat_server():
 			    joined4 = ["CHAT: ", str(currRoomRef),"\nCLIENT_NAME:",nameString , "\nMESSAGE:",messageString,"\n\n"]
 			    joined5 = ''.join(joined4)
 			    sock.send(joined5)
-			    print("hi")
                             broadcast(broadList, server_socket, sock,joined5)
-			    print("hi2")
                         else:
                             sock.send("ERROR_CODE: 2\nERROR_DESCRIPTION: You are not in this chatroom.\n")
                 elif data2[0] == "LEAVE_CHATROOM:":
@@ -216,8 +205,6 @@ def chat_server():
                     for y in roomListLists:
                         for z in y:
                             if z == sock:
-				print(roomListLists.index(y))
-				print(currName)
 				joined4 = ["CHAT: ", str(roomListLists.index(y)),"\nCLIENT_NAME: ",currName , "\nMESSAGE: ",currName," has left\n\n"]
 		    		joined5 = ''.join(joined4)
 				broadcast(y, server_socket, z, joined5)
@@ -234,7 +221,6 @@ def chat_server():
 		else:
 		    print("mistake")
 	    
-	    	print(data)
 	    #print(sock)
 #else:
                     # remove the socket that's broken

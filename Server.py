@@ -93,6 +93,7 @@ def chat_server():
                             nameString = nameString + str(data2[x+5]) + " "
                             x = x+1
                         userList[joinID-1].name = nameString
+			print joinID
 		    else:
 			
                         x = 1
@@ -130,12 +131,14 @@ def chat_server():
 			sock.send(joined5)
 
                     if new == 0:
+			print('hello')
                         userList[joinID-1].new = 1
                         if temp != 0:
+			    print('temp2 = ', temp2)
                             joinID = temp2
                         else:
                             joinID = joinID + 1
-                        temp = 0
+                            temp = 0
                         
             
                 elif data2[0] == "HELO":
@@ -200,8 +203,11 @@ def chat_server():
                         x = x+1
                     for x in userList:
                         if x.socket == sock:
-                            temp = x.joinID
+                            temp = len(userList)
+			    print ('index ', userList.index(x), 'Join ID ', temp, ' left')
                             userList.remove(x)
+		    for x in userList:
+			print ('index ', userList.index(x), 'Join ID ', x.joinID)
                     for y in roomListLists:
                         for z in y:
                             if z == sock:

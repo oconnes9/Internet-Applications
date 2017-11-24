@@ -11,7 +11,7 @@ PORT = 9009
 userList = []	#List of users and their details
 roomListStrings = []	#Used to check if room has already been created. Index maps directly to index in RoomListLists below.
 roomListLists = []	#A list of room arrays, each containing the sockets of their members.
-serverIP = '134.226.44.148'
+serverIP = sys.argv[2]
 
 
 class User(object):

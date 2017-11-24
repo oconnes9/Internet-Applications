@@ -1,2 +1,2 @@
-echo $1
-python Server.py '134.226.44.148' $1
+IP=$(hostname -I)
+python Server.py $IP $1

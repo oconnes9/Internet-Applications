@@ -56,7 +56,7 @@ def chat_server():
                 data = sock.recv(RECV_BUFFER)
                 data2 = data.split()	#Splits message into an array of words
                 size = len(data2)	#Used later to parse chat messages.
-                if data2[0] == "JOIN_CHATROOM:":
+                if data2[0] == "JOIN_CHATROOM:":	#JOIN chatroom
                     for x in userList:		
                         if x.socket == sock:
                             user = x
@@ -130,7 +130,7 @@ def chat_server():
                     returnMes = ["HELO BASE_TEST\nIP: ", serverIP, "\nPort:", str(PORT), "\nStudentID:14315362\n"]
                     returnMes2 = ' '.join(returnMes)
                     sock.send(returnMes2)
-                elif data2[0] == "CHAT:":
+                elif data2[0] == "CHAT:":	#SEND chat message
                     nameString = ""
                     messageString = ""
                     currJoinID = data2[3]
@@ -154,7 +154,7 @@ def chat_server():
                             broadcast(broadList, server_socket, sock,joined5)
                         else:					#User not in room
                             sock.send("ERROR_CODE: 2\nERROR_DESCRIPTION: You are not in this chatroom.\n")
-                elif data2[0] == "LEAVE_CHATROOM:":
+                elif data2[0] == "LEAVE_CHATROOM:":	#LEAVE CHATROOM
                     currRoomRef = data2[1]
                     currJoinID = data2[3]
                     currName = ""
@@ -172,7 +172,7 @@ def chat_server():
                     broadcast(broadList, server_socket, sock, joined5)	#Notify room that user has left
                    
 
-                elif data2[0] == "DISCONNECT:":
+                elif data2[0] == "DISCONNECT:":	#DISCONNECT from server
 		    currName = ""
                     x = 5			#For parsing data received
                     while x != size:
@@ -180,8 +180,9 @@ def chat_server():
                         x = x+1
                     for x in userList:
                         if x.socket == sock:	#Find the user that wants to disconnect
-                            temp = len(userList)
+                            #temp = len(userList)
                             userList.remove(x)	#Remove from userlist
+			    temp = len(userList)
                     for y in roomListLists:	#Remove player from every chat room they are in.
                         for z in y:
                             if z == sock:	

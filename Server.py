@@ -7,11 +7,13 @@ import threading
 HOST = ''
 SOCKET_LIST = [] 	#List of connected sockets
 RECV_BUFFER = 4096
-PORT = 9009
+PORT = int(sys.argv[2])
 userList = []	#List of users and their details
 roomListStrings = []	#Used to check if room has already been created. Index maps directly to index in RoomListLists below.
 roomListLists = []	#A list of room arrays, each containing the sockets of their members.
-serverIP = sys.argv[2]
+serverIP = sys.argv[1]
+print(serverIP)
+print(PORT)
 
 
 class User(object):

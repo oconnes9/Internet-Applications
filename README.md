@@ -1,5 +1,9 @@
 # Internet-Applications
+<<<<<<< HEAD
 Project 1
+=======
+
+>>>>>>> 6ae4779057ea460f0f4bbe39f5a9ef80ea02a197
 Name: Sean O'Connell
 Student number: 14315362
 
@@ -17,4 +21,8 @@ To parse incoming messages throughout different parts of the server, I first spl
 
 To figure out who to broadcast to when a message is sent, the provided room reference is the index of the room in roomListLists. This member of the array contains the list of sockets to broadcast to. This list is passed into the broadcast function along with the senders socket, the server socket and the message to be sent. The broadcast function broadcasts to everyone in the list that was passed in but does not broadcast to the server or the sender.
 
+<<<<<<< HEAD
 Hopefully everything is clear enough but if not just let me know and I'm happy to explain!
+=======
+Hopefully everything is clear enough but if not just let me know and I'm happy to explain!
+>>>>>>> 6ae4779057ea460f0f4bbe39f5a9ef80ea02a197

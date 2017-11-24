@@ -1,11 +1,8 @@
 # Internet-Applications
-<<<<<<< HEAD
-Project 1
-=======
-
->>>>>>> 6ae4779057ea460f0f4bbe39f5a9ef80ea02a197
 Name: Sean O'Connell
 Student number: 14315362
+
+Since my project is written in python I didn't need to write a compile script, just a start.sh with the port number as an argument.
 
 I have included lots of comments so hopefully everything is clear enough but if not I have explained my general thought process here!
 
